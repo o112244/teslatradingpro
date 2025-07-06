@@ -21,56 +21,53 @@ export const useTeslaPrice = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTeslaPrice = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const simulateRealisticStockMovement = () => {
+    setTeslaData(prev => {
+      // Simulate realistic Tesla stock movements
+      const volatility = 0.015; // 1.5% max change per update (stocks are less volatile than crypto)
+      const randomChange = (Math.random() - 0.5) * 2 * volatility;
+      const newPrice = prev.price * (1 + randomChange);
       
-      // Use environment variable for API key instead of hardcoded 'demo'
-      const apiKey = import.meta.env.VITE_FMP_API_KEY || 'demo';
-      const response = await fetch(`/api/fmp/v3/quote/TSLA?apikey=${apiKey}`);
+      // Calculate 24h change based on the movement
+      const change24h = newPrice - prev.price + prev.change24h * 0.9; // Decay previous change
+      const changePercent24h = (change24h / (newPrice - change24h)) * 100;
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch Tesla price');
-      }
+      // Simulate volume changes
+      const volumeChange = (Math.random() - 0.5) * 0.1; // 10% max volume change
+      const newVolume = Math.max(prev.volume * (1 + volumeChange), 10000000);
       
-      const data = await response.json();
+      // Update market cap based on new price (approximate shares outstanding: 3.17B)
+      const sharesOutstanding = 3170000000;
+      const newMarketCap = newPrice * sharesOutstanding;
       
-      if (data && data.length > 0) {
-        const quote = data[0];
-        setTeslaData({
-          price: quote.price || 248.42,
-          change24h: quote.change || -3.18,
-          changePercent24h: quote.changesPercentage || -1.26,
-          volume: quote.volume || 89234567,
-          marketCap: quote.marketCap || 789456123000,
-          lastUpdated: new Date()
-        });
-      }
-    } catch (err) {
-      console.error('Error fetching Tesla price:', err);
-      setError('Failed to fetch real-time Tesla price');
-      // Simulate realistic price movements as fallback
-      setTeslaData(prev => ({
-        ...prev,
-        price: prev.price + (Math.random() - 0.5) * 2,
-        change24h: prev.change24h + (Math.random() - 0.5) * 0.5,
+      return {
+        price: Math.max(newPrice, 50), // Minimum price floor
+        change24h,
+        changePercent24h,
+        volume: Math.round(newVolume),
+        marketCap: Math.round(newMarketCap),
         lastUpdated: new Date()
-      }));
-    } finally {
-      setIsLoading(false);
-    }
+      };
+    });
   };
 
   useEffect(() => {
-    // Fetch immediately
-    fetchTeslaPrice();
-    
-    // Then fetch every 30 seconds for real-time updates
-    const interval = setInterval(fetchTeslaPrice, 30000);
+    // Simulate price updates every 60 seconds (stock market data updates less frequently)
+    const interval = setInterval(simulateRealisticStockMovement, 60000);
     
     return () => clearInterval(interval);
   }, []);
 
-  return { teslaData, isLoading, error, refetch: fetchTeslaPrice };
+  const refetch = () => {
+    setIsLoading(true);
+    setError(null);
+    
+    // Simulate a brief loading state
+    setTimeout(() => {
+      simulateRealisticStockMovement();
+      setIsLoading(false);
+    }, 500);
+  };
+
+  return { teslaData, isLoading, error, refetch };
 };
