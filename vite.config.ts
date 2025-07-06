@@ -13,7 +13,7 @@ export default defineConfig({
         target: 'https://api.coingecko.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/coingecko/, ''),
-        secure: true,
+        secure: false,
       },
     },
   },
