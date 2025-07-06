@@ -52,8 +52,8 @@ export const useBitcoinPrice = () => {
     // Fetch immediately
     fetchBitcoinPrice();
     
-    // Then fetch every 30 seconds
-    const interval = setInterval(fetchBitcoinPrice, 30000);
+    // Then fetch every 60 seconds (increased from 30 seconds to reduce API rate limit issues)
+    const interval = setInterval(fetchBitcoinPrice, 60000);
     
     return () => clearInterval(interval);
   }, []);
