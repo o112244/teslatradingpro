@@ -22,8 +22,15 @@ export const useBitcoinPrice = () => {
       setIsLoading(true);
       setError(null);
       
-      // Using proxied CoinGecko API for real Bitcoin price
-      const response = await fetch('/api/coingecko/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
+      // Build URL with optional API key for better reliability
+      const apiKey = import.meta.env.VITE_COINGECKO_API_KEY;
+      let url = '/api/coingecko/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true';
+      
+      if (apiKey) {
+        url += `&x_cg_api_key=${apiKey}`;
+      }
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error('Failed to fetch Bitcoin price');

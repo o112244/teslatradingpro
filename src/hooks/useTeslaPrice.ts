@@ -26,8 +26,9 @@ export const useTeslaPrice = () => {
       setIsLoading(true);
       setError(null);
       
-      // Using Financial Modeling Prep API for real Tesla stock price
-      const response = await fetch('/api/fmp/v3/quote/TSLA?apikey=demo');
+      // Use environment variable for API key instead of hardcoded 'demo'
+      const apiKey = import.meta.env.VITE_FMP_API_KEY || 'demo';
+      const response = await fetch(`/api/fmp/v3/quote/TSLA?apikey=${apiKey}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch Tesla price');

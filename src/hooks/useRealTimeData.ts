@@ -40,7 +40,8 @@ export const useRealTimeData = () => {
 
   const [isConnected, setIsConnected] = useState(false);
 
-  const wsUrl = import.meta.env.VITE_WS_URL || 'wss://localhost:3001/ws';
+  // Use ws:// instead of wss:// for localhost to avoid TLS handshake issues
+  const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3001/ws';
 
   const { isConnected: wsConnected, sendMessage } = useWebSocket(wsUrl, {
     onMessage: (message) => {
@@ -105,8 +106,15 @@ export const useRealTimeData = () => {
     if (!isConnected) {
       const interval = setInterval(async () => {
         try {
-          // Fetch Bitcoin price
-          const btcResponse = await fetch('/api/coingecko/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true');
+          // Fetch Bitcoin price with optional API key
+          const coinGeckoApiKey = import.meta.env.VITE_COINGECKO_API_KEY;
+          let btcUrl = '/api/coingecko/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true';
+          
+          if (coinGeckoApiKey) {
+            btcUrl += `&x_cg_api_key=${coinGeckoApiKey}`;
+          }
+          
+          const btcResponse = await fetch(btcUrl);
           if (btcResponse.ok) {
             const btcData = await btcResponse.json();
             if (btcData.bitcoin) {
@@ -123,8 +131,9 @@ export const useRealTimeData = () => {
             }
           }
 
-          // Fetch Tesla price
-          const tslaResponse = await fetch('/api/fmp/v3/quote/TSLA?apikey=demo');
+          // Fetch Tesla price with environment variable API key
+          const fmpApiKey = import.meta.env.VITE_FMP_API_KEY || 'demo';
+          const tslaResponse = await fetch(`/api/fmp/v3/quote/TSLA?apikey=${fmpApiKey}`);
           if (tslaResponse.ok) {
             const tslaData = await tslaResponse.json();
             if (tslaData && tslaData.length > 0) {
