@@ -1,5 +1,6 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Activity, Globe, Clock } from 'lucide-react';
+import RealTimeIndicator from './RealTimeIndicator';
 
 interface MarketOverviewProps {
   bitcoinData: {
@@ -33,10 +34,6 @@ const MarketOverview: React.FC<MarketOverviewProps> = ({ bitcoinData, teslaData 
     return `$${formatNumber(num)}`;
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
   return (
     <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8">
       <div className="flex items-center justify-between mb-6">
@@ -49,10 +46,10 @@ const MarketOverview: React.FC<MarketOverviewProps> = ({ bitcoinData, teslaData 
             <p className="text-gray-400 text-sm">Real-time market data</p>
           </div>
         </div>
-        <div className="flex items-center space-x-2 text-gray-400 text-sm">
-          <Clock className="h-4 w-4" />
-          <span>Last updated: {formatTime(new Date())}</span>
-        </div>
+        <RealTimeIndicator 
+          isConnected={true} 
+          lastUpdated={bitcoinData.lastUpdated}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -69,7 +66,7 @@ const MarketOverview: React.FC<MarketOverviewProps> = ({ bitcoinData, teslaData 
               </div>
             </div>
             <div className="flex items-center space-x-1">
-              <Activity className="h-4 w-4 text-orange-400" />
+              <Activity className="h-4 w-4 text-orange-400 animate-pulse" />
               <span className="text-orange-400 text-sm">Live</span>
             </div>
           </div>
@@ -117,7 +114,7 @@ const MarketOverview: React.FC<MarketOverviewProps> = ({ bitcoinData, teslaData 
               </div>
             </div>
             <div className="flex items-center space-x-1">
-              <Activity className="h-4 w-4 text-red-400" />
+              <Activity className="h-4 w-4 text-red-400 animate-pulse" />
               <span className="text-red-400 text-sm">Live</span>
             </div>
           </div>

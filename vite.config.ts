@@ -13,8 +13,51 @@ export default defineConfig({
         target: 'https://api.coingecko.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/coingecko/, ''),
-        secure: false,
+        secure: true,
+        headers: {
+          'User-Agent': 'Tesla-Stock-Pro/1.0'
+        }
       },
+      '/api/fmp': {
+        target: 'https://financialmodelingprep.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/fmp/, ''),
+        secure: true,
+        headers: {
+          'User-Agent': 'Tesla-Stock-Pro/1.0'
+        }
+      },
+      '/api/auth': {
+        target: process.env.VITE_API_URL || 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false
+      },
+      '/api/trading': {
+        target: process.env.VITE_API_URL || 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false
+      },
+      '/api/portfolio': {
+        target: process.env.VITE_API_URL || 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false
+      }
     },
   },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          icons: ['lucide-react']
+        }
+      }
+    }
+  },
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+  }
 });

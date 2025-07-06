@@ -1,30 +1,24 @@
 import React, { useState } from 'react';
 import { TrendingUp, TrendingDown, Bitcoin, Zap, DollarSign, Wallet, Plus, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useBitcoinPrice } from '../hooks/useBitcoinPrice';
-import { useTeslaPrice } from '../hooks/useTeslaPrice';
+import { useRealTimeData } from '../hooks/useRealTimeData';
 import TradingInterface from '../components/TradingInterface';
 import PortfolioChart from '../components/PortfolioChart';
 import MarketOverview from '../components/MarketOverview';
 import LiveChat from '../components/LiveChat';
 import BitcoinPurchase from '../components/BitcoinPurchase';
+import RealTimeIndicator from '../components/RealTimeIndicator';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const { bitcoinData, isLoading: bitcoinLoading, error: bitcoinError, refetch: refetchBitcoin } = useBitcoinPrice();
-  const { teslaData, isLoading: teslaLoading, error: teslaError, refetch: refetchTesla } = useTeslaPrice();
+  const { marketData, isConnected } = useRealTimeData();
   const [showBitcoinPurchase, setShowBitcoinPurchase] = useState(false);
 
   if (!user) return null;
 
-  const portfolioValue = user.portfolio.teslaShares * teslaData.price;
-  const totalBitcoinValue = user.portfolio.bitcoinBalance * bitcoinData.price;
+  const portfolioValue = user.portfolio.teslaShares * marketData.tesla.price;
+  const totalBitcoinValue = user.portfolio.bitcoinBalance * marketData.bitcoin.price;
   const totalPortfolioValue = portfolioValue + totalBitcoinValue;
-
-  const handleRefreshPrices = () => {
-    refetchBitcoin();
-    refetchTesla();
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800">
@@ -39,19 +33,18 @@ const Dashboard: React.FC = () => {
               <p className="text-gray-300">Welcome back, {user.name}</p>
             </div>
             <div className="flex items-center space-x-3 mt-4 sm:mt-0">
-              <button
-                onClick={handleRefreshPrices}
-                disabled={bitcoinLoading || teslaLoading}
-                className="flex items-center space-x-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-all duration-200 disabled:opacity-50"
-              >
-                <RefreshCw className={`h-4 w-4 ${(bitcoinLoading || teslaLoading) ? 'animate-spin' : ''}`} />
-                <span className="text-sm">Refresh Prices</span>
-              </button>
+              <RealTimeIndicator 
+                isConnected={isConnected} 
+                lastUpdated={marketData.bitcoin.lastUpdated}
+              />
             </div>
           </div>
 
           {/* Market Overview */}
-          <MarketOverview bitcoinData={bitcoinData} teslaData={teslaData} />
+          <MarketOverview 
+            bitcoinData={marketData.bitcoin} 
+            teslaData={marketData.tesla} 
+          />
 
           {/* Portfolio Overview Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -116,7 +109,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-gray-400">TSLA Price</p>
-                  <p className="text-2xl font-bold text-white">${teslaData.price.toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-white">${marketData.tesla.price.toFixed(2)}</p>
                   <p className="text-xs text-gray-500">per share</p>
                 </div>
               </div>
@@ -124,13 +117,13 @@ const Dashboard: React.FC = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-400">24h Change</span>
                   <div className="flex items-center space-x-1">
-                    {teslaData.changePercent24h >= 0 ? (
+                    {marketData.tesla.changePercent24h >= 0 ? (
                       <TrendingUp className="h-3 w-3 text-green-400" />
                     ) : (
                       <TrendingDown className="h-3 w-3 text-red-400" />
                     )}
-                    <span className={`text-sm font-medium ${teslaData.changePercent24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {teslaData.changePercent24h >= 0 ? '+' : ''}{teslaData.changePercent24h.toFixed(2)}%
+                    <span className={`text-sm font-medium ${marketData.tesla.changePercent24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {marketData.tesla.changePercent24h >= 0 ? '+' : ''}{marketData.tesla.changePercent24h.toFixed(2)}%
                     </span>
                   </div>
                 </div>
@@ -169,8 +162,8 @@ const Dashboard: React.FC = () => {
             {/* Trading Interface */}
             <div className="lg:col-span-2">
               <TradingInterface 
-                teslaPrice={teslaData.price} 
-                bitcoinPrice={bitcoinData.price}
+                teslaPrice={marketData.tesla.price} 
+                bitcoinPrice={marketData.bitcoin.price}
               />
             </div>
 
@@ -179,8 +172,8 @@ const Dashboard: React.FC = () => {
               <PortfolioChart 
                 teslaShares={user.portfolio.teslaShares}
                 bitcoinBalance={user.portfolio.bitcoinBalance}
-                teslaPrice={teslaData.price}
-                bitcoinPrice={bitcoinData.price}
+                teslaPrice={marketData.tesla.price}
+                bitcoinPrice={marketData.bitcoin.price}
               />
             </div>
           </div>
@@ -204,7 +197,7 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-semibold">${(0.1 * bitcoinData.price).toFixed(2)}</p>
+                    <p className="text-white font-semibold">${(0.1 * marketData.bitcoin.price).toFixed(2)}</p>
                     <p className="text-gray-400 text-sm">6 hours ago</p>
                   </div>
                 </div>
@@ -220,7 +213,7 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-semibold">${(10 * teslaData.price).toFixed(2)}</p>
+                    <p className="text-white font-semibold">${(10 * marketData.tesla.price).toFixed(2)}</p>
                     <p className="text-gray-400 text-sm">2 hours ago</p>
                   </div>
                 </div>
@@ -236,25 +229,13 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-semibold">${(5 * teslaData.price).toFixed(2)}</p>
+                    <p className="text-white font-semibold">${(5 * marketData.tesla.price).toFixed(2)}</p>
                     <p className="text-gray-400 text-sm">1 day ago</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Error Messages */}
-          {(bitcoinError || teslaError) && (
-            <div className="mt-4 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
-              <p className="text-yellow-200 text-sm">
-                {bitcoinError && `Bitcoin: ${bitcoinError}`}
-                {bitcoinError && teslaError && ' | '}
-                {teslaError && `Tesla: ${teslaError}`}
-                {' - Using cached data.'}
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
