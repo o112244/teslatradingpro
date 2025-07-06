@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, Eye, EyeOff, Zap } from 'lucide-react';
+import { LogIn, Eye, EyeOff, Zap, UserPlus, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage: React.FC = () => {
@@ -22,7 +22,7 @@ const LoginPage: React.FC = () => {
       if (success) {
         navigate('/dashboard');
       } else {
-        setError('Invalid credentials. Please try again.');
+        setError('Invalid credentials. Please check your email and password.');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
@@ -31,14 +31,9 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const fillDemoCredentials = (type: 'admin' | 'user') => {
-    if (type === 'admin') {
-      setEmail('admin@tesla.com');
-      setPassword('admin123');
-    } else {
-      setEmail('user@demo.com');
-      setPassword('demo123');
-    }
+  const fillAdminCredentials = () => {
+    setEmail('admin@tesla.com');
+    setPassword('admin123');
   };
 
   return (
@@ -117,30 +112,37 @@ const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          {/* Demo Credentials */}
+          {/* Account Creation Notice */}
           <div className="mt-6 pt-6 border-t border-gray-600">
-            <p className="text-gray-400 text-sm text-center mb-4">Demo Credentials:</p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => fillDemoCredentials('admin')}
-                className="bg-gray-700/50 hover:bg-gray-600/50 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200 border border-gray-600 hover:border-red-500/50"
-              >
-                Admin Access
-              </button>
-              <button
-                onClick={() => fillDemoCredentials('user')}
-                className="bg-gray-700/50 hover:bg-gray-600/50 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200 border border-gray-600 hover:border-red-500/50"
-              >
-                User Access
-              </button>
+            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+              <div className="flex items-start space-x-2">
+                <UserPlus className="h-4 w-4 text-blue-400 mt-0.5" />
+                <div>
+                  <p className="text-blue-200 text-sm font-medium">New to Tesla Stock Pro?</p>
+                  <p className="text-blue-300 text-xs mt-1">
+                    Contact our support team to create your trading account. We'll verify your identity and set up your secure Bitcoin wallet integration.
+                  </p>
+                </div>
+              </div>
             </div>
+          </div>
+
+          {/* Admin Access */}
+          <div className="mt-4">
+            <button
+              onClick={fillAdminCredentials}
+              className="w-full bg-gray-700/50 hover:bg-gray-600/50 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200 border border-gray-600 hover:border-red-500/50 flex items-center justify-center space-x-2"
+            >
+              <Shield className="h-4 w-4" />
+              <span>Admin Access</span>
+            </button>
           </div>
         </div>
 
         {/* Security Notice */}
         <div className="mt-6 text-center">
           <p className="text-gray-400 text-sm">
-            This is a secure demo environment. All transactions are simulated.
+            Your account is protected with bank-grade security and encryption.
           </p>
         </div>
       </div>
