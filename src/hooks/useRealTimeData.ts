@@ -47,8 +47,13 @@ export const useRealTimeData = () => {
     // Use HTTP polling as the primary data source
     const interval = setInterval(async () => {
       try {
-        // Fetch Bitcoin price without API key first (free tier)
+        // Fetch Bitcoin price with API key if available for authenticated requests
+        const coinGeckoApiKey = import.meta.env.VITE_COINGECKO_API_KEY;
         let btcUrl = '/api/coingecko/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true';
+        
+        if (coinGeckoApiKey) {
+          btcUrl += `&x_cg_pro_api_key=${coinGeckoApiKey}`;
+        }
         
         const btcResponse = await fetch(btcUrl);
         if (btcResponse.ok) {
@@ -95,7 +100,14 @@ export const useRealTimeData = () => {
     // Fetch immediately on mount
     const fetchInitialData = async () => {
       try {
-        const btcResponse = await fetch('/api/coingecko/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true');
+        const coinGeckoApiKey = import.meta.env.VITE_COINGECKO_API_KEY;
+        let btcUrl = '/api/coingecko/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true';
+        
+        if (coinGeckoApiKey) {
+          btcUrl += `&x_cg_pro_api_key=${coinGeckoApiKey}`;
+        }
+        
+        const btcResponse = await fetch(btcUrl);
         if (btcResponse.ok) {
           const btcData = await btcResponse.json();
           if (btcData.bitcoin) {

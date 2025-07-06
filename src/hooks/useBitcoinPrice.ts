@@ -22,8 +22,13 @@ export const useBitcoinPrice = () => {
       setIsLoading(true);
       setError(null);
       
-      // Use free tier without API key first
+      // Use API key if available for authenticated requests
+      const apiKey = import.meta.env.VITE_COINGECKO_API_KEY;
       let url = '/api/coingecko/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true';
+      
+      if (apiKey) {
+        url += `&x_cg_pro_api_key=${apiKey}`;
+      }
       
       const response = await fetch(url);
       
