@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useWebSocket } from './useWebSocket';
 
 interface MarketData {
   bitcoin: {
@@ -40,129 +39,91 @@ export const useRealTimeData = () => {
 
   const [isConnected, setIsConnected] = useState(false);
 
-  // Use ws:// instead of wss:// for localhost to avoid TLS handshake issues
-  const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3001/ws';
-
-  const { isConnected: wsConnected, sendMessage } = useWebSocket(wsUrl, {
-    onMessage: (message) => {
-      switch (message.type) {
-        case 'MARKET_UPDATE':
-          setMarketData(prev => ({
-            ...prev,
-            ...message.data,
-            bitcoin: {
-              ...prev.bitcoin,
-              ...message.data.bitcoin,
-              lastUpdated: new Date()
-            },
-            tesla: {
-              ...prev.tesla,
-              ...message.data.tesla,
-              lastUpdated: new Date()
-            }
-          }));
-          break;
-        case 'BITCOIN_PRICE':
-          setMarketData(prev => ({
-            ...prev,
-            bitcoin: {
-              ...prev.bitcoin,
-              ...message.data,
-              lastUpdated: new Date()
-            }
-          }));
-          break;
-        case 'TESLA_PRICE':
-          setMarketData(prev => ({
-            ...prev,
-            tesla: {
-              ...prev.tesla,
-              ...message.data,
-              lastUpdated: new Date()
-            }
-          }));
-          break;
-      }
-    },
-    onConnect: () => {
-      setIsConnected(true);
-      // Subscribe to market data updates
-      sendMessage({
-        type: 'SUBSCRIBE',
-        channels: ['bitcoin_price', 'tesla_price', 'market_updates']
-      });
-    },
-    onDisconnect: () => {
-      setIsConnected(false);
-    }
-  });
+  // Disable WebSocket connection for now to avoid connection errors
+  // WebSocket functionality can be enabled when a proper WebSocket server is available
+  const wsUrl = null; // Temporarily disabled
 
   useEffect(() => {
-    setIsConnected(wsConnected);
-  }, [wsConnected]);
-
-  // Fallback to HTTP polling if WebSocket is not available
-  useEffect(() => {
-    if (!isConnected) {
-      const interval = setInterval(async () => {
-        try {
-          // Fetch Bitcoin price with optional API key
-          const coinGeckoApiKey = import.meta.env.VITE_COINGECKO_API_KEY;
-          let btcUrl = '/api/coingecko/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true';
-          
-          if (coinGeckoApiKey) {
-            btcUrl += `&x_cg_api_key=${coinGeckoApiKey}`;
+    // Use HTTP polling as the primary data source
+    const interval = setInterval(async () => {
+      try {
+        // Fetch Bitcoin price without API key first (free tier)
+        let btcUrl = '/api/coingecko/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true';
+        
+        const btcResponse = await fetch(btcUrl);
+        if (btcResponse.ok) {
+          const btcData = await btcResponse.json();
+          if (btcData.bitcoin) {
+            setMarketData(prev => ({
+              ...prev,
+              bitcoin: {
+                price: btcData.bitcoin.usd,
+                change24h: btcData.bitcoin.usd * (btcData.bitcoin.usd_24h_change / 100),
+                changePercent24h: btcData.bitcoin.usd_24h_change,
+                volume: btcData.bitcoin.usd_24h_vol || prev.bitcoin.volume,
+                lastUpdated: new Date()
+              }
+            }));
           }
-          
-          const btcResponse = await fetch(btcUrl);
-          if (btcResponse.ok) {
-            const btcData = await btcResponse.json();
-            if (btcData.bitcoin) {
-              setMarketData(prev => ({
-                ...prev,
-                bitcoin: {
-                  price: btcData.bitcoin.usd,
-                  change24h: btcData.bitcoin.usd * (btcData.bitcoin.usd_24h_change / 100),
-                  changePercent24h: btcData.bitcoin.usd_24h_change,
-                  volume: btcData.bitcoin.usd_24h_vol,
-                  lastUpdated: new Date()
-                }
-              }));
-            }
-          }
-
-          // Fetch Tesla price with environment variable API key
-          const fmpApiKey = import.meta.env.VITE_FMP_API_KEY || 'demo';
-          const tslaResponse = await fetch(`/api/fmp/v3/quote/TSLA?apikey=${fmpApiKey}`);
-          if (tslaResponse.ok) {
-            const tslaData = await tslaResponse.json();
-            if (tslaData && tslaData.length > 0) {
-              const quote = tslaData[0];
-              setMarketData(prev => ({
-                ...prev,
-                tesla: {
-                  price: quote.price,
-                  change24h: quote.change,
-                  changePercent24h: quote.changesPercentage,
-                  volume: quote.volume,
-                  marketCap: quote.marketCap,
-                  lastUpdated: new Date()
-                }
-              }));
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching market data:', error);
         }
-      }, 30000); // Update every 30 seconds
 
-      return () => clearInterval(interval);
-    }
-  }, [isConnected]);
+        // Fetch Tesla price with environment variable API key
+        const fmpApiKey = import.meta.env.VITE_FMP_API_KEY || 'demo';
+        const tslaResponse = await fetch(`/api/fmp/v3/quote/TSLA?apikey=${fmpApiKey}`);
+        if (tslaResponse.ok) {
+          const tslaData = await tslaResponse.json();
+          if (tslaData && tslaData.length > 0) {
+            const quote = tslaData[0];
+            setMarketData(prev => ({
+              ...prev,
+              tesla: {
+                price: quote.price,
+                change24h: quote.change,
+                changePercent24h: quote.changesPercentage,
+                volume: quote.volume,
+                marketCap: quote.marketCap,
+                lastUpdated: new Date()
+              }
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching market data:', error);
+      }
+    }, 30000); // Update every 30 seconds
+
+    // Fetch immediately on mount
+    const fetchInitialData = async () => {
+      try {
+        const btcResponse = await fetch('/api/coingecko/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true');
+        if (btcResponse.ok) {
+          const btcData = await btcResponse.json();
+          if (btcData.bitcoin) {
+            setMarketData(prev => ({
+              ...prev,
+              bitcoin: {
+                price: btcData.bitcoin.usd,
+                change24h: btcData.bitcoin.usd * (btcData.bitcoin.usd_24h_change / 100),
+                changePercent24h: btcData.bitcoin.usd_24h_change,
+                volume: btcData.bitcoin.usd_24h_vol || prev.bitcoin.volume,
+                lastUpdated: new Date()
+              }
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching initial Bitcoin data:', error);
+      }
+    };
+
+    fetchInitialData();
+
+    return () => clearInterval(interval);
+  }, []);
 
   return {
     marketData,
-    isConnected,
-    isRealTime: isConnected
+    isConnected: false, // Always false since WebSocket is disabled
+    isRealTime: false   // Always false since we're using HTTP polling
   };
 };

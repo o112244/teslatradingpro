@@ -13,19 +13,13 @@ export default defineConfig({
         target: 'https://api.coingecko.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/coingecko/, ''),
-        secure: true,
-        headers: {
-          'User-Agent': 'Tesla-Stock-Pro/1.0'
-        }
+        secure: true
       },
       '/api/fmp': {
         target: 'https://financialmodelingprep.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/fmp/, ''),
-        secure: true,
-        headers: {
-          'User-Agent': 'Tesla-Stock-Pro/1.0'
-        }
+        secure: true
       },
       '/api/auth': {
         target: process.env.VITE_API_URL || 'http://localhost:3001',

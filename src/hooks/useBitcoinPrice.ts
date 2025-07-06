@@ -22,18 +22,13 @@ export const useBitcoinPrice = () => {
       setIsLoading(true);
       setError(null);
       
-      // Build URL with optional API key for better reliability
-      const apiKey = import.meta.env.VITE_COINGECKO_API_KEY;
+      // Use free tier without API key first
       let url = '/api/coingecko/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true';
-      
-      if (apiKey) {
-        url += `&x_cg_api_key=${apiKey}`;
-      }
       
       const response = await fetch(url);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch Bitcoin price');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const data = await response.json();
@@ -59,7 +54,7 @@ export const useBitcoinPrice = () => {
     // Fetch immediately
     fetchBitcoinPrice();
     
-    // Then fetch every 60 seconds (increased from 30 seconds to reduce API rate limit issues)
+    // Then fetch every 60 seconds
     const interval = setInterval(fetchBitcoinPrice, 60000);
     
     return () => clearInterval(interval);
