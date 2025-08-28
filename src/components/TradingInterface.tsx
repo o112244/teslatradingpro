@@ -18,6 +18,7 @@ const TradingInterface: React.FC<TradingInterfaceProps> = ({ teslaPrice, bitcoin
   const totalCost = shares * teslaPrice;
   const bitcoinRequired = totalCost / bitcoinPrice;
   const canAfford = user.portfolio.bitcoinBalance >= bitcoinRequired;
+  const maxAffordableShares = Math.floor((user.portfolio.bitcoinBalance * bitcoinPrice) / teslaPrice);
 
   const handlePurchase = async () => {
     if (!canAfford) return;
@@ -91,7 +92,7 @@ const TradingInterface: React.FC<TradingInterfaceProps> = ({ teslaPrice, bitcoin
             <input
               type="number"
               min="1"
-              max="100"
+              max={Math.max(maxAffordableShares, 1)}
               value={shares}
               onChange={(e) => setShares(parseInt(e.target.value) || 1)}
               className="w-full px-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white text-lg focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all duration-200"
@@ -102,19 +103,22 @@ const TradingInterface: React.FC<TradingInterfaceProps> = ({ teslaPrice, bitcoin
           </div>
           <div className="flex justify-between mt-2 text-sm">
             <span className="text-gray-400">Min: 1 share</span>
-            <span className="text-gray-400">Max: 100 shares</span>
+            <span className="text-gray-400">Max: {maxAffordableShares} shares (affordable)</span>
           </div>
         </div>
 
         {/* Quick Share Buttons */}
         <div className="grid grid-cols-4 gap-3">
-          {[1, 5, 10, 25].map(quickShares => (
+          {[1, Math.min(5, maxAffordableShares), Math.min(10, maxAffordableShares), Math.min(25, maxAffordableShares)].filter((val, index, arr) => arr.indexOf(val) === index && val > 0).map(quickShares => (
             <button
               key={quickShares}
               onClick={() => setShares(quickShares)}
+              disabled={quickShares > maxAffordableShares}
               className={`py-3 px-4 rounded-xl text-sm font-medium transition-all duration-200 ${
                 shares === quickShares
                   ? 'bg-red-600 text-white'
+                  : quickShares > maxAffordableShares
+                  ? 'bg-gray-700/30 text-gray-500 cursor-not-allowed border border-gray-600/30'
                   : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
               }`}
             >
@@ -169,7 +173,7 @@ const TradingInterface: React.FC<TradingInterfaceProps> = ({ teslaPrice, bitcoin
               <div>
                 <p className="text-red-200 font-medium">Insufficient Bitcoin Balance</p>
                 <p className="text-red-300 text-sm mt-1">
-                  You need {(bitcoinRequired - user.portfolio.bitcoinBalance).toFixed(6)} more BTC to complete this purchase.
+                  You need {(bitcoinRequired - user.portfolio.bitcoinBalance).toFixed(6)} more BTC to complete this purchase. You can afford up to {maxAffordableShares} shares.
                 </p>
               </div>
             </div>

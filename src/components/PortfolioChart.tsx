@@ -30,24 +30,33 @@ const PortfolioChart: React.FC<PortfolioChartProps> = ({
 
       {/* Visual Chart */}
       <div className="mb-6">
-        <div className="relative h-32 bg-gray-700/30 rounded-lg overflow-hidden">
-          <div 
-            className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-red-500 transition-all duration-500"
-            style={{ width: `${teslaPercentage}%` }}
-          ></div>
-          <div 
-            className="absolute right-0 top-0 h-full bg-gradient-to-r from-orange-600 to-orange-500 transition-all duration-500"
-            style={{ width: `${bitcoinPercentage}%` }}
-          ></div>
-          
-          {/* Center Labels */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center text-white">
-              <p className="text-2xl font-bold">${totalValue.toFixed(2)}</p>
-              <p className="text-sm text-gray-300">Total Value</p>
+        {totalValue > 0 ? (
+          <div className="relative h-32 bg-gray-700/30 rounded-lg overflow-hidden">
+            <div 
+              className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-red-500 transition-all duration-500"
+              style={{ width: `${teslaPercentage}%` }}
+            ></div>
+            <div 
+              className="absolute right-0 top-0 h-full bg-gradient-to-r from-orange-600 to-orange-500 transition-all duration-500"
+              style={{ width: `${bitcoinPercentage}%` }}
+            ></div>
+            
+            {/* Center Labels */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center text-white">
+                <p className="text-2xl font-bold">${totalValue.toFixed(2)}</p>
+                <p className="text-sm text-gray-300">Total Value</p>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="relative h-32 bg-gray-700/30 rounded-lg overflow-hidden flex items-center justify-center">
+            <div className="text-center text-gray-400">
+              <p className="text-lg font-medium">No Portfolio Data</p>
+              <p className="text-sm">Start trading to see your portfolio</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Asset Breakdown */}
@@ -88,24 +97,26 @@ const PortfolioChart: React.FC<PortfolioChartProps> = ({
       </div>
 
       {/* Performance Metrics */}
-      <div className="mt-6 pt-4 border-t border-gray-600">
-        <div className="grid grid-cols-2 gap-4 text-center">
-          <div>
-            <div className="flex items-center justify-center space-x-1 mb-1">
-              <TrendingUp className="h-4 w-4 text-green-400" />
-              <span className="text-green-400 text-sm">+8.5%</span>
+      {totalValue > 0 && (
+        <div className="mt-6 pt-4 border-t border-gray-600">
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <div className="flex items-center justify-center space-x-1 mb-1">
+                <TrendingUp className="h-4 w-4 text-green-400" />
+                <span className="text-green-400 text-sm">+8.5%</span>
+              </div>
+              <p className="text-gray-400 text-xs">24h Change</p>
             </div>
-            <p className="text-gray-400 text-xs">24h Change</p>
-          </div>
-          <div>
-            <div className="flex items-center justify-center space-x-1 mb-1">
-              <TrendingUp className="h-4 w-4 text-green-400" />
-              <span className="text-green-400 text-sm">+24.3%</span>
+            <div>
+              <div className="flex items-center justify-center space-x-1 mb-1">
+                <TrendingUp className="h-4 w-4 text-green-400" />
+                <span className="text-green-400 text-sm">+24.3%</span>
+              </div>
+              <p className="text-gray-400 text-xs">7d Change</p>
             </div>
-            <p className="text-gray-400 text-xs">7d Change</p>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -36,6 +36,10 @@ const LoginPage: React.FC = () => {
     setPassword('admin123');
   };
 
+  const fillDemoCredentials = () => {
+    setEmail('demo@tesla.com');
+    setPassword('demo123');
+  };
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
@@ -127,8 +131,15 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Admin Access */}
-          <div className="mt-4">
+          {/* Demo Access */}
+          <div className="mt-4 space-y-2">
+            <button
+              onClick={fillDemoCredentials}
+              className="w-full bg-blue-700/50 hover:bg-blue-600/50 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200 border border-blue-600 hover:border-blue-500/50 flex items-center justify-center space-x-2"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Demo User Access</span>
+            </button>
             <button
               onClick={fillAdminCredentials}
               className="w-full bg-gray-700/50 hover:bg-gray-600/50 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200 border border-gray-600 hover:border-red-500/50 flex items-center justify-center space-x-2"

@@ -135,7 +135,7 @@ const MarketOverview: React.FC<MarketOverviewProps> = ({ bitcoinData, teslaData 
                   <TrendingDown className="h-3 w-3" />
                 )}
                 <span className="text-sm font-medium">
-                  {teslaData.changePercent24h >= 0 ? '+' : ''}{formatNumber(teslaData.changePercent24h)}%
+              <p className="text-white font-semibold">{formatLargeNumber(bitcoinData.price * 19700000)}</p>
                 </span>
               </div>
             </div>
@@ -143,7 +143,7 @@ const MarketOverview: React.FC<MarketOverviewProps> = ({ bitcoinData, teslaData 
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-400">24h Change:</span>
-                <span className={teslaData.change24h >= 0 ? 'text-green-400' : 'text-red-400'}>
+              <p className="text-white font-semibold">{(bitcoinData.price / teslaData.price).toFixed(0)}:1</p>
                   {teslaData.change24h >= 0 ? '+' : ''}${formatNumber(Math.abs(teslaData.change24h))}
                 </span>
               </div>

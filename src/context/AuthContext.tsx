@@ -59,37 +59,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     }
     
-    // For real users, this would connect to your authentication API
-    // Example implementation for production:
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        const realUser: User = {
-          id: userData.id,
-          email: userData.email,
-          name: userData.name,
-          role: 'user',
-          portfolio: {
-            teslaShares: userData.portfolio?.teslaShares || 0,
-            totalValue: userData.portfolio?.totalValue || 0,
-            bitcoinBalance: userData.portfolio?.bitcoinBalance || 0
-          }
-        };
-        setUser(realUser);
-        localStorage.setItem('user', JSON.stringify(realUser));
-        return true;
-      }
-    } catch (error) {
-      console.error('Login error:', error);
+    // Demo user login for testing
+    if (email === 'demo@tesla.com' && password === 'demo123') {
+      const demoUser: User = {
+        id: 'demo-1',
+        email: 'demo@tesla.com',
+        name: 'Demo User',
+        role: 'user',
+        portfolio: {
+          teslaShares: 15,
+          totalValue: 3726.30,
+          bitcoinBalance: 0.25
+        }
+      };
+      setUser(demoUser);
+      localStorage.setItem('user', JSON.stringify(demoUser));
+      return true;
     }
+    
+    // For production, this would connect to your authentication API
+    // Temporarily disabled to prevent network errors in demo
+    // try {
+    //   const response = await fetch('/api/auth/login', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({ email, password }),
+    //   });
+    //   
+    //   if (response.ok) {
+    //     const userData = await response.json();
+    //     const realUser: User = {
+    //       id: userData.id,
+    //       email: userData.email,
+    //       name: userData.name,
+    //       role: 'user',
+    //       portfolio: {
+    //         teslaShares: userData.portfolio?.teslaShares || 0,
+    //         totalValue: userData.portfolio?.totalValue || 0,
+    //         bitcoinBalance: userData.portfolio?.bitcoinBalance || 0
+    //       }
+    //     };
+    //     setUser(realUser);
+    //     localStorage.setItem('user', JSON.stringify(realUser));
+    //     return true;
+    //   }
+    // } catch (error) {
+    //   console.error('Login error:', error);
+    // }
     
     return false;
   };

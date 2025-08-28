@@ -31,7 +31,7 @@ const BitcoinPurchase: React.FC<BitcoinPurchaseProps> = ({ isOpen, onClose }) =>
     setTimeout(() => {
       // Update user's Bitcoin balance
       if (user) {
-        updatePortfolio(0, 0, -bitcoinAmount); // Negative to add Bitcoin
+        updatePortfolio(0, 0, -bitcoinAmount); // Add Bitcoin to balance
         
         setIsProcessing(false);
         setShowSuccess(true);
@@ -40,6 +40,7 @@ const BitcoinPurchase: React.FC<BitcoinPurchaseProps> = ({ isOpen, onClose }) =>
           setShowSuccess(false);
           onClose();
           setStep('amount');
+          setAmount(100); // Reset to default
         }, 3000);
       }
     }, 3000);
