@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LogIn, Eye, EyeOff, Zap, UserPlus, Shield } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { LogIn, Eye, EyeOff, Zap, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,27 +18,17 @@ const LoginPage: React.FC = () => {
     setError('');
 
     try {
-      const success = await login(email, password);
+      const success = await login(emailOrPhone, password);
       if (success) {
         navigate('/dashboard');
       } else {
-        setError('Invalid credentials. Please check your email and password.');
+        setError('Invalid credentials. Please check your email/phone and password.');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const fillAdminCredentials = () => {
-    setEmail('admin@tesla.com');
-    setPassword('admin123');
-  };
-
-  const fillDemoCredentials = () => {
-    setEmail('demo@tesla.com');
-    setPassword('demo123');
   };
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
@@ -49,7 +39,7 @@ const LoginPage: React.FC = () => {
             <Zap className="h-8 w-8 text-white" />
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-          <p className="text-gray-300">Sign in to your Tesla Stock Pro account</p>
+          <p className="text-gray-300">Sign in with your email or phone number</p>
         </div>
 
         {/* Login Form */}
@@ -62,16 +52,16 @@ const LoginPage: React.FC = () => {
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                Email Address
+              <label htmlFor="emailOrPhone" className="block text-sm font-medium text-gray-300 mb-2">
+                Email or Phone Number
               </label>
               <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="emailOrPhone"
+                type="text"
+                value={emailOrPhone}
+                onChange={(e) => setEmailOrPhone(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-900/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors duration-200"
-                placeholder="Enter your email"
+                placeholder="Enter your email or phone number"
                 required
               />
             </div>
@@ -116,45 +106,31 @@ const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          {/* Account Creation Notice */}
           <div className="mt-6 pt-6 border-t border-gray-600">
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-              <div className="flex items-start space-x-2">
-                <UserPlus className="h-4 w-4 text-blue-400 mt-0.5" />
-                <div>
-                  <p className="text-blue-200 text-sm font-medium">New to Tesla Stock Pro?</p>
-                  <p className="text-blue-300 text-xs mt-1">
-                    Contact our support team to create your trading account. We'll verify your identity and set up your secure Bitcoin wallet integration.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Demo Access */}
-          <div className="mt-4 space-y-2">
-            <button
-              onClick={fillDemoCredentials}
-              className="w-full bg-blue-700/50 hover:bg-blue-600/50 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200 border border-blue-600 hover:border-blue-500/50 flex items-center justify-center space-x-2"
-            >
-              <UserPlus className="h-4 w-4" />
-              <span>Demo User Access</span>
-            </button>
-            <button
-              onClick={fillAdminCredentials}
-              className="w-full bg-gray-700/50 hover:bg-gray-600/50 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200 border border-gray-600 hover:border-red-500/50 flex items-center justify-center space-x-2"
-            >
-              <Shield className="h-4 w-4" />
-              <span>Admin Access</span>
-            </button>
+            <p className="text-center text-gray-300 text-sm">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-red-400 hover:text-red-300 font-medium transition-colors duration-200">
+                Create one now
+              </Link>
+            </p>
           </div>
         </div>
 
-        {/* Security Notice */}
-        <div className="mt-6 text-center">
-          <p className="text-gray-400 text-sm">
-            Your account is protected with bank-grade security and encryption.
-          </p>
+        <div className="mt-6 space-y-4">
+          <div className="text-center">
+            <p className="text-gray-400 text-sm">
+              Your account is protected with bank-grade security and encryption.
+            </p>
+          </div>
+          <div className="text-center">
+            <Link
+              to="/"
+              className="inline-flex items-center space-x-2 text-gray-400 hover:text-white transition-colors duration-200"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="text-sm">Back to home</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

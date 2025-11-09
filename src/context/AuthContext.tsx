@@ -1,8 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface User {
   id: string;
-  email: string;
+  email?: string;
+  phone?: string;
   name: string;
   role: 'user' | 'admin';
   portfolio: {
@@ -12,9 +18,17 @@ interface User {
   };
 }
 
+interface RegisterData {
+  name: string;
+  email?: string;
+  phone?: string;
+  password: string;
+}
+
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (emailOrPhone: string, password: string) => Promise<boolean>;
+  register: (data: RegisterData) => Promise<boolean>;
   logout: () => void;
   updatePortfolio: (shares: number, totalValue: number, bitcoinSpent: number) => void;
 }
@@ -40,76 +54,114 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Admin login - keep for platform management
-    if (email === 'admin@tesla.com' && password === 'admin123') {
-      const adminUser: User = {
-        id: 'admin-1',
-        email: 'admin@tesla.com',
-        name: 'Admin User',
-        role: 'admin',
+  const login = async (emailOrPhone: string, password: string): Promise<boolean> => {
+    try {
+      const isEmail = emailOrPhone.includes('@');
+
+      const { data: users, error } = await supabase
+        .from('users')
+        .select('*, portfolios(*)')
+        .or(isEmail ? `email.eq.${emailOrPhone}` : `phone.eq.${emailOrPhone}`)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (error || !users) {
+        console.error('Login error:', error);
+        return false;
+      }
+
+      const bcrypt = await import('bcryptjs');
+      const passwordMatch = await bcrypt.compare(password, users.password_hash);
+
+      if (!passwordMatch) {
+        return false;
+      }
+
+      const portfolio = users.portfolios?.[0] || {
+        tesla_shares: 0,
+        bitcoin_balance: 0,
+        total_value: 0
+      };
+
+      const loggedInUser: User = {
+        id: users.id,
+        email: users.email,
+        phone: users.phone,
+        name: users.name,
+        role: users.role,
+        portfolio: {
+          teslaShares: Number(portfolio.tesla_shares) || 0,
+          totalValue: Number(portfolio.total_value) || 0,
+          bitcoinBalance: Number(portfolio.bitcoin_balance) || 0
+        }
+      };
+
+      setUser(loggedInUser);
+      localStorage.setItem('user', JSON.stringify(loggedInUser));
+      return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
+    }
+  };
+
+  const register = async (data: RegisterData): Promise<boolean> => {
+    try {
+      const bcrypt = await import('bcryptjs');
+      const passwordHash = await bcrypt.hash(data.password, 10);
+
+      const { data: newUser, error: userError } = await supabase
+        .from('users')
+        .insert({
+          name: data.name,
+          email: data.email || null,
+          phone: data.phone || null,
+          password_hash: passwordHash,
+          role: 'user',
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (userError || !newUser) {
+        console.error('Registration error:', userError);
+        return false;
+      }
+
+      const { error: portfolioError } = await supabase
+        .from('portfolios')
+        .insert({
+          user_id: newUser.id,
+          tesla_shares: 0,
+          bitcoin_balance: 0,
+          total_value: 0
+        });
+
+      if (portfolioError) {
+        console.error('Portfolio creation error:', portfolioError);
+        return false;
+      }
+
+      const registeredUser: User = {
+        id: newUser.id,
+        email: newUser.email,
+        phone: newUser.phone,
+        name: newUser.name,
+        role: newUser.role,
         portfolio: {
           teslaShares: 0,
           totalValue: 0,
-          bitcoinBalance: 5.5
+          bitcoinBalance: 0
         }
       };
-      setUser(adminUser);
-      localStorage.setItem('user', JSON.stringify(adminUser));
+
+      setUser(registeredUser);
+      localStorage.setItem('user', JSON.stringify(registeredUser));
       return true;
+    } catch (error) {
+      console.error('Registration error:', error);
+      return false;
     }
-    
-    // Demo user login for testing
-    if (email === 'demo@tesla.com' && password === 'demo123') {
-      const demoUser: User = {
-        id: 'demo-1',
-        email: 'demo@tesla.com',
-        name: 'Demo User',
-        role: 'user',
-        portfolio: {
-          teslaShares: 15,
-          totalValue: 3726.30,
-          bitcoinBalance: 0.25
-        }
-      };
-      setUser(demoUser);
-      localStorage.setItem('user', JSON.stringify(demoUser));
-      return true;
-    }
-    
-    // For production, this would connect to your authentication API
-    // Temporarily disabled to prevent network errors in demo
-    // try {
-    //   const response = await fetch('/api/auth/login', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({ email, password }),
-    //   });
-    //   
-    //   if (response.ok) {
-    //     const userData = await response.json();
-    //     const realUser: User = {
-    //       id: userData.id,
-    //       email: userData.email,
-    //       name: userData.name,
-    //       role: 'user',
-    //       portfolio: {
-    //         teslaShares: userData.portfolio?.teslaShares || 0,
-    //         totalValue: userData.portfolio?.totalValue || 0,
-    //         bitcoinBalance: userData.portfolio?.bitcoinBalance || 0
-    //       }
-    //     };
-    //     setUser(realUser);
-    //     localStorage.setItem('user', JSON.stringify(realUser));
-    //     return true;
-    //   }
-    // } catch (error) {
-    //   console.error('Login error:', error);
-    // }
-    
-    return false;
   };
 
   const logout = () => {
@@ -117,7 +169,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('user');
   };
 
-  const updatePortfolio = (shares: number, totalValue: number, bitcoinSpent: number) => {
+  const updatePortfolio = async (shares: number, totalValue: number, bitcoinSpent: number) => {
     if (user) {
       const updatedUser = {
         ...user,
@@ -128,16 +180,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           bitcoinBalance: user.portfolio.bitcoinBalance - bitcoinSpent
         }
       };
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      
-      // In production, sync with backend
-      // syncPortfolioWithBackend(updatedUser.portfolio);
+
+      try {
+        await supabase
+          .from('portfolios')
+          .update({
+            tesla_shares: updatedUser.portfolio.teslaShares,
+            bitcoin_balance: updatedUser.portfolio.bitcoinBalance,
+            total_value: updatedUser.portfolio.totalValue
+          })
+          .eq('user_id', user.id);
+
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      } catch (error) {
+        console.error('Portfolio update error:', error);
+      }
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updatePortfolio }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updatePortfolio }}>
       {children}
     </AuthContext.Provider>
   );
