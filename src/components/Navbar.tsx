@@ -27,6 +27,14 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
+            <Link
+              to="/about"
+              className={`text-gray-300 hover:text-white transition-colors duration-200 ${
+                location.pathname === '/about' ? 'text-red-400' : ''
+              }`}
+            >
+              About
+            </Link>
             {user ? (
               <>
                 <Link
@@ -89,6 +97,13 @@ const Navbar: React.FC = () => {
         {isOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-black/95 backdrop-blur-sm rounded-b-lg border-t border-red-900/20">
+              <Link
+                to="/about"
+                className="block text-gray-300 hover:text-white px-3 py-2 rounded-md transition-colors duration-200"
+                onClick={() => setIsOpen(false)}
+              >
+                About
+              </Link>
               {user ? (
                 <>
                   <Link
